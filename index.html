@@ -723,7 +723,7 @@
   <div class="section-heading">授权限制</div>
 
   <div class="field">
-    <div class="field-label"><span class="required"></span> 摄影师可将照片用于</div>
+    <div class="field-label">摄影师可将照片用于 <span class="optional">optional</span></div>
     <div class="chips auth-chips" id="d_auth">
       <div class="chip" onclick="toggleChip(this)">发布社交媒体</div>
       <div class="chip" onclick="toggleChip(this)">作品集展示</div>
@@ -1069,7 +1069,6 @@ function validateDemand() {
   if (!getSelectedChips('d_gender_pref').length) errors.push({ id: 'd_gender_pref', msg: '请选择对摄影师性别的要求' });
   if (!getVal('d_time')) errors.push({ id: 'd_time', msg: '请填写可拍时间' });
   if (!getVal('d_city')) errors.push({ id: 'd_city', msg: '请填写地点' });
-  if (!getSelectedChips('d_auth').length) errors.push({ id: 'd_auth', msg: '请选择授权范围' });
   if (errors.length) { errors.forEach(e => showError(e.id, e.msg)); return false; }
   return true;
 }
@@ -1272,7 +1271,6 @@ function saveCard() {
 
   const rect = card.getBoundingClientRect();
   const exportW = 1080;
-  const exportH = Math.round(exportW * rect.height / rect.width);
   const scale = exportW / rect.width;
 
   document.fonts.ready.then(() => {
@@ -1285,11 +1283,34 @@ function saveCard() {
       width: rect.width,
       height: rect.height,
     }).then(canvas => {
-      const link = document.createElement('a');
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
       const mode = currentMode === 'demand' ? 'fermo-委托人' : 'fermo-摄影师';
-      link.download = `${mode}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
+      const filename = mode + '-' + Date.now() + '.png';
+
+      // 判断是否移动端
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // 移动端：打开新标签页显示图片，用户长按保存
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write('<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>保存图片</title><style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;height:auto}p{color:#fff;font-family:sans-serif;font-size:14px;margin-top:16px;text-align:center;opacity:0.7}</style></head><body><img src="' + dataUrl + '" /><p>长按图片 → 保存到相册</p></body></html>');
+          win.document.close();
+        } else {
+          // 若弹窗被阻止，直接用 a 标签
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = filename;
+          link.click();
+        }
+      } else {
+        // 桌面端：直接下载
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        link.click();
+      }
+
       btn.textContent = originalText;
       btn.style.opacity = '';
       btn.style.pointerEvents = '';
