@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>互勉 · 摄影匹配</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── Wes Anderson · Yellow + Pink + Green ── */
+    --bg:        #fdf8ee;       /* vanilla cream 主背景 */
+    --bg2:       #fff8f0;       /* 暖白 输入框/cell */
+    --bg3:       #f5ede0;       /* 浅杏 hover */
+    --yellow:    #FAC775;       /* fermo dot yellow 主强调 */
+    --yellow-lt: #fde8b8;       /* butter 浅黄 选中底 */
+    --pink:      #f5b8c8;       /* dusty rose 需求侧 */
+    --pink-dk:   #D4537E;       /* fermo pink 按钮/header */
+    --green:     #a8c890;       /* sage 供给侧 */
+    --green-dk:  #6c9858;       /* forest 深绿 按钮/header */
+    --border:    rgba(160,120,80,0.15);
+    --border-active: rgba(160,120,80,0.4);
+    --text:      #4a3028;       /* warm brown 主文字 */
+    --text-2:    #9c7860;       /* 中棕 次文字 */
+    --text-3:    #c4a888;       /* 浅棕 占位/标签 */
+    --radius:    8px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Wes stripe texture ── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: repeating-linear-gradient(90deg,
+      var(--yellow) 0, var(--yellow) 20px,
+      var(--pink) 20px, var(--pink) 40px,
+      var(--green) 40px, var(--green) 60px);
+    z-index: 100;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 20px 20px 0;
+    text-align: center;
+    position: relative;
+  }
+  .header svg { display: block; margin: 0 auto; }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+  .logo span { font-style: italic; color: var(--pink-dk); }
+  .tagline {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* ── Mode Toggle ── */
+  .mode-toggle {
+    display: flex;
+    margin: 24px 20px 0;
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    position: relative;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.2s;
+    position: relative;
+    z-index: 1;
+  }
+  .mode-btn.active { color: var(--text); font-weight: 600; }
+  .mode-slider {
+    position: absolute;
+    top: 4px; left: 4px;
+    height: calc(100% - 8px);
+    width: calc(50% - 4px);
+    border-radius: 4px;
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1), background 0.3s;
+  }
+  /* slider color changes per mode — set via JS */
+  .mode-slider.demand-mode { background: var(--pink); }
+  .mode-slider.supply-mode { background: var(--green); transform: translateX(calc(100%)); }
+
+  /* ── Form ── */
+  .form-wrap {
+    padding: 24px 20px 40px;
+    max-width: 480px;
+    margin: 0 auto;
+    display: none;
+  }
+  .form-wrap.visible {
+    display: block;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .section-heading {
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-heading:first-child { margin-top: 0; }
+
+  .field { margin-bottom: 14px; }
+  .field-label {
+    font-size: 12px;
+    color: var(--text-2);
+    letter-spacing: 0.04em;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+  }
+  .required {
+    width: 5px; height: 5px;
+    background: var(--pink-dk);
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .supply-form .required { background: var(--green-dk); }
+  .optional {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+  }
+
+  input[type=text], input[type=date], textarea, select {
+    width: 100%;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 11px 13px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+  .demand-form input:focus, .demand-form textarea:focus {
+    border-color: var(--pink-dk);
+    background: #fff;
+  }
+  .supply-form input:focus, .supply-form textarea:focus {
+    border-color: var(--green-dk);
+    background: #fff;
+  }
+  input[type=text]::placeholder, textarea::placeholder { color: var(--text-3); }
+  textarea { resize: none; line-height: 1.6; }
+
+  /* Chip multi-select */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    padding: 6px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg2);
+    user-select: none;
+    letter-spacing: 0.02em;
+  }
+  .demand-form .chip.selected {
+    border-color: var(--pink-dk);
+    color: var(--text);
+    background: var(--pink);
+    font-weight: 500;
+  }
+  .supply-form .chip.selected {
+    border-color: var(--green-dk);
+    color: var(--text);
+    background: var(--green);
+    font-weight: 500;
+  }
+
+  /* Image upload */
+  .upload-area {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--bg2);
+    position: relative;
+  }
+  .demand-form .upload-area:hover { border-color: var(--pink-dk); background: #fff8fc; }
+  .supply-form .upload-area:hover { border-color: var(--green-dk); background: #f8fcf4; }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 22px; margin-bottom: 6px; color: var(--text-3); }
+  .upload-text { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+  .upload-previews { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .preview-img {
+    width: 72px; height: 72px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1.5px solid var(--border);
+  }
+
+  /* Auth chips */
+  .auth-chips .chip { font-size: 11px; padding: 5px 11px; }
+
+  /* Stepper */
+  .stepper-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    width: fit-content;
+  }
+  .stepper-btn {
+    width: 30px; height: 30px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text-2);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+  }
+  .demand-form .stepper-btn:hover { border-color: var(--pink-dk); color: var(--pink-dk); background: #fff0f4; }
+  .supply-form .stepper-btn:hover { border-color: var(--green-dk); color: var(--green-dk); background: #f0f8ec; }
+  .stepper-val {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 26px;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .stepper-unit { font-size: 12px; color: var(--text-3); letter-spacing: 0.04em; }
+
+  /* Gear tags */
+  .gear-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 4px; }
+  .gear-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: 1.5px solid var(--border);
+    border-radius: 5px; padding: 5px 10px;
+    font-size: 12px; color: var(--text);
+    font-family: 'Jost', sans-serif;
+  }
+  .gear-tag-remove {
+    cursor: pointer; color: var(--text-3); font-size: 14px; line-height: 1;
+    transition: color 0.15s;
+  }
+  .gear-tag-remove:hover { color: var(--pink-dk); }
+
+  /* Other input */
+  .other-input-wrap { display: none; margin-top: 10px; }
+  .other-input-wrap.visible { display: block; }
+
+  /* Field error */
+  .field-error {
+    font-size: 11px;
+    color: var(--pink-dk);
+    margin-top: 5px;
+    font-family: 'Jost', sans-serif;
+    animation: fadeUp 0.2s ease;
+  }
+  .toggle-label { display: flex; align-items: center; cursor: pointer; flex-shrink: 0; }
+  .toggle-label input { display: none; }
+  .toggle-track {
+    width: 36px; height: 20px; background: var(--border);
+    border-radius: 10px; position: relative;
+    transition: background 0.2s; border: 1.5px solid var(--border);
+  }
+  .toggle-label input:checked ~ .toggle-track { background: var(--green); border-color: var(--green-dk); }
+  .supply-form .toggle-label input:checked ~ .toggle-track { background: var(--green); border-color: var(--green-dk); }
+  .toggle-thumb {
+    position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px; background: var(--text-3);
+    border-radius: 50%; transition: transform 0.2s, background 0.2s;
+  }
+  .toggle-label input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(16px); background: var(--text);
+  }
+
+  /* Deletable image */
+  .preview-img-wrap { position: relative; display: inline-block; }
+  .preview-img-del {
+    position: absolute; top: -6px; right: -6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--pink-dk); color: #fff;
+    font-size: 11px; line-height: 18px; text-align: center;
+    cursor: pointer; font-family: 'Jost', sans-serif;
+    font-weight: 600; user-select: none;
+  }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+  /* Generate Button */
+  .demand-form .gen-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--pink-dk);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 32px;
+  }
+  .supply-form .gen-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--green-dk);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 32px;
+  }
+  .gen-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .gen-btn:active { transform: translateY(0); }
+
+  /* ── Preview Card ── */
+  .preview-section {
+    display: none;
+    padding: 0 20px 60px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .preview-section.visible { display: block; animation: fadeUp 0.3s ease both; }
+  .preview-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  /* The generated card — fixed 3:4 for social export */
+  .gen-card {
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+    border: 2px solid;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .card-demand { border-color: var(--pink-dk); background: #fffaf8; }
+  .card-supply  { border-color: var(--green-dk); background: #f8fcf4; }
+
+  /* ── 卡片共用 ── */
+  .card-body {
+    flex: 1; overflow: hidden; padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 600; color: var(--text);
+    letter-spacing: 0.01em; line-height: 1.1;
+  }
+  .card-sub {
+    font-size: 11px; color: var(--text-2);
+    letter-spacing: 0.04em; margin-top: -4px;
+  }
+  /* 框内字段网格 */
+  .card-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .card-cell {
+    background: #fffde8; border: 1.5px solid var(--yellow);
+    border-radius: 5px; padding: 8px 10px;
+  }
+  .card-supply .card-cell { background: #f0fbe8; border-color: var(--green); }
+  .cell-label {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 3px;
+  }
+  .cell-val { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  /* tags 行 */
+  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ctag {
+    font-size: 10px; font-weight: 600; padding: 3px 10px;
+    border-radius: 3px; letter-spacing: 0.04em;
+  }
+  .ctag-yellow { background: var(--yellow); color: var(--text); }
+  .ctag-green  { background: var(--green);  color: var(--text); }
+  .ctag-pink   { background: var(--pink);   color: var(--text); }
+  /* 授权一行 */
+  .card-auth-line {
+    font-size: 11px; color: var(--text-2); line-height: 1.5;
+    padding-top: 4px; border-top: 1px solid var(--border);
+  }
+  .card-auth-line strong {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-3);
+    display: block; margin-bottom: 2px;
+  }
+
+  /* ── Layout 1张：右侧图，左侧文字 ── */
+  .card-body.layout-one {
+    padding: 0; flex-direction: row; gap: 0;
+  }
+  .layout-one .card-left {
+    flex: 1; padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 9px; overflow: hidden;
+  }
+  .layout-one .card-right {
+    flex: 0 0 42%; overflow: hidden;
+  }
+  .layout-one .card-right img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+
+  /* ── Layout 2-3张：上图下文 ── */
+  .card-body.layout-multi {
+    padding: 0; flex-direction: column; gap: 0;
+  }
+  .layout-multi .card-photos-top {
+    display: flex; gap: 4px;
+    flex: 0 0 48%; overflow: hidden;
+  }
+  .layout-multi .card-photos-top .photo-slot {
+    flex: 1; overflow: hidden;
+  }
+  .layout-multi .card-photos-top .photo-slot img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .layout-multi .card-info-bottom {
+    flex: 1; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 7px; overflow: hidden;
+  }
+  .layout-multi .card-name { font-size: 20px; }
+  .layout-multi .card-grid { gap: 5px; }
+  .layout-multi .card-cell { padding: 6px 8px; }
+  .layout-multi .cell-val { font-size: 11px; }
+
+  .card-footer {
+    flex-shrink: 0;
+  }
+
+  /* Wes stripe */
+  .card-stripe {
+    height: 5px;
+  }
+  .card-demand .card-stripe {
+    background: repeating-linear-gradient(90deg, var(--yellow) 0, var(--yellow) 10px, var(--pink) 10px, var(--pink) 13px);
+  }
+  .card-supply .card-stripe {
+    background: repeating-linear-gradient(90deg, var(--yellow) 0, var(--yellow) 10px, var(--green) 10px, var(--green) 13px);
+  }
+
+  .card-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px 10px;
+    border-bottom: 1.5px solid;
+  }
+  .card-demand .card-top-bar { background: var(--pink); border-color: var(--pink-dk); }
+  .card-supply .card-top-bar  { background: var(--green); border-color: var(--green-dk); }
+
+  .card-type-label {
+    font-size: 9px;
+    font-family: 'Jost', sans-serif;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .card-logo-sm {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--text);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .card-demand .card-footer { border-color: var(--pink); background: #fff5f8; border-top: 1.5px solid; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .card-supply .card-footer  { border-color: var(--green); background: #f5fbf0; border-top: 1.5px solid; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .card-footer-note { font-size: 9px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Jost', sans-serif; font-weight: 400; }
+
+  .card-photos {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 14px;
+    width: 100%;
+  .card-demand .card-footer { border-color: var(--pink); background: #fff5f8; border-top: 1.5px solid; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .card-supply .card-footer  { border-color: var(--green); background: #f5fbf0; border-top: 1.5px solid; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .card-footer-note { font-size: 9px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Jost', sans-serif; font-weight: 400; }
+  .card-watermark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    color: var(--text-2);
+    font-style: italic;
+  }
+  /* Action buttons */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 13px 0;
+    border-radius: var(--radius-sm);
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    border: 1.5px solid var(--border);
+    background: var(--bg2);
+    color: var(--text-2);
+    transition: opacity 0.2s, transform 0.15s;
+    user-select: none;
+  }
+  .action-btn.primary {
+    background: var(--yellow);
+    color: var(--text);
+    border-color: var(--yellow);
+    font-weight: 600;
+  }
+  .action-btn:hover { opacity: 0.82; }
+  .action-btn:active { transform: scale(0.98); }
+
+  .header, .mode-toggle, .form-wrap, .preview-section { position: relative; z-index: 1; }
+
+  /* Fade in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <svg width="180" height="48" viewBox="0 0 288 80" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
+    <text x="6" y="66" font-size="60" font-weight="300" fill="#D4537E" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" letter-spacing="2">fermo</text>
+    <circle cx="32" cy="15" r="9" fill="#FAC775"/>
+  </svg>
+  <div class="tagline">Photography Match</div>
+</div>
+
+<div class="mode-toggle" id="modeToggle">
+  <div class="mode-slider demand-mode" id="modeSlider"></div>
+  <button class="mode-btn active" id="btnDemand" onclick="setMode('demand')">我是委托人</button>
+  <button class="mode-btn" id="btnSupply" onclick="setMode('supply')">我是摄影师</button>
+</div>
+
+<!-- ═══════════════ DEMAND FORM ═══════════════ -->
+<div class="form-wrap demand-form visible" id="demandForm">
+
+  <div class="section-heading">关于我</div>
+
+  <div class="field">
+    <div class="field-label">昵称 <span class="optional">optional</span></div>
+    <input type="text" id="d_name" placeholder="小红书 / IG 账号" />
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 我的性别</div>
+    <div class="chips" id="d_gender">
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender')">女</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender')">男</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender')">非二元</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender')">不透露</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 对摄影师性别的要求</div>
+    <div class="chips" id="d_gender_pref">
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender_pref')">仅限女摄影师</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender_pref')">仅限男摄影师</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender_pref')">同性别优先</div>
+      <div class="chip" onclick="toggleChipSingle(this,'d_gender_pref')">无要求</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 拍摄总人数</div>
+    <div class="stepper-row">
+      <button class="stepper-btn" onclick="stepCount(-1)">−</button>
+      <span class="stepper-val" id="d_count_val">1</span>
+      <button class="stepper-btn" onclick="stepCount(1)">+</button>
+      <span class="stepper-unit">人</span>
+    </div>
+  </div>
+
+  <div class="section-heading">我想拍什么</div>
+
+  <div class="field">
+    <div class="field-label">拍摄主题 <span class="optional">optional</span></div>
+    <div class="chips" id="d_theme">
+      <div class="chip" onclick="toggleChip(this)">日常</div>
+      <div class="chip" onclick="toggleChip(this)">毕业季</div>
+      <div class="chip" onclick="toggleChip(this)">情侣</div>
+      <div class="chip" onclick="toggleChip(this)">换季穿搭</div>
+      <div class="chip" onclick="toggleChip(this)">生日</div>
+      <div class="chip" onclick="toggleChip(this)">旅行</div>
+      <div class="chip chip-other" onclick="toggleOther(this,'d_theme_other_wrap')">其他</div>
+    </div>
+    <div class="other-input-wrap" id="d_theme_other_wrap">
+      <input type="text" id="d_theme_other" placeholder="请描述拍摄主题…" />
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">风格偏好 <span class="optional">optional</span></div>
+    <div class="chips" id="d_styles">
+      <div class="chip" onclick="toggleChip(this)">胶片</div>
+      <div class="chip" onclick="toggleChip(this)">清新</div>
+      <div class="chip" onclick="toggleChip(this)">暗调</div>
+      <div class="chip" onclick="toggleChip(this)">日系</div>
+      <div class="chip" onclick="toggleChip(this)">复古</div>
+      <div class="chip" onclick="toggleChip(this)">人文</div>
+      <div class="chip" onclick="toggleChip(this)">氛围感</div>
+      <div class="chip" onclick="toggleChip(this)">纪实</div>
+      <div class="chip chip-other" onclick="toggleOther(this,'d_style_other_wrap')">其他</div>
+    </div>
+    <div class="other-input-wrap" id="d_style_other_wrap">
+      <input type="text" id="d_style_other" placeholder="请描述你想要的风格…" />
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">参考图 <span class="optional">optional · 1–3 张</span></div>
+    <div class="upload-area" id="d_refUpload">
+      <input type="file" accept="image/*" multiple onchange="handleUpload(event,'d_previews')" />
+      <div class="upload-icon">＋</div>
+      <div class="upload-text">上传喜欢的风格参考<br>一张图顶千言万语</div>
+      <div class="upload-previews" id="d_previews"></div>
+    </div>
+  </div>
+
+  <div class="section-heading">时间 + 地点</div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 可拍时间</div>
+    <input type="text" id="d_time" placeholder="如：本月周末 / 12月15日后" />
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 地点</div>
+    <input type="text" id="d_city" placeholder="如：上海静安 / Bangkok / NYC" />
+  </div>
+
+  <div class="section-heading">授权限制</div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 摄影师可将照片用于</div>
+    <div class="chips auth-chips" id="d_auth">
+      <div class="chip" onclick="toggleChip(this)">发布社交媒体</div>
+      <div class="chip" onclick="toggleChip(this)">作品集展示</div>
+      <div class="chip" onclick="toggleChip(this)">商业用途</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">发布条件 <span class="optional">optional</span></div>
+    <div class="chips auth-chips" id="d_auth_cond">
+      <div class="chip" onclick="toggleChip(this)">需标记我的账号</div>
+      <div class="chip" onclick="toggleChip(this)">需提前告知我</div>
+      <div class="chip" onclick="toggleChip(this)">人脸需打码</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">补充说明 <span class="optional">optional</span></div>
+    <textarea id="d_note" rows="3" placeholder="特殊要求、不喜欢的风格、其他细节…"></textarea>
+  </div>
+
+  <button class="gen-btn" onclick="generateCard('demand')">生成我的委托卡片 →</button>
+</div>
+
+<!-- ═══════════════ SUPPLY FORM ═══════════════ -->
+<div class="form-wrap supply-form" id="supplyForm">
+
+  <div class="section-heading">关于我</div>
+
+  <div class="field">
+    <div class="field-label">昵称 <span class="optional">optional</span></div>
+    <input type="text" id="s_name" placeholder="小红书 / IG 账号" />
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 我的性别</div>
+    <div class="chips" id="s_gender">
+      <div class="chip" onclick="toggleChipSingle(this,'s_gender')">女</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_gender')">男</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_gender')">非二元</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_gender')">不透露</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">摄影经验 <span class="optional">optional</span></div>
+    <div class="chips" id="s_exp">
+      <div class="chip" onclick="toggleChipSingle(this,'s_exp')">新手练习</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_exp')">1–3 年</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_exp')">3 年以上</div>
+    </div>
+  </div>
+
+  <div class="section-heading">我能拍什么</div>
+
+  <div class="field">
+    <div class="field-label">擅长风格 <span class="optional">optional</span></div>
+    <div class="chips" id="s_styles">
+      <div class="chip" onclick="toggleChip(this)">胶片</div>
+      <div class="chip" onclick="toggleChip(this)">清新</div>
+      <div class="chip" onclick="toggleChip(this)">暗调</div>
+      <div class="chip" onclick="toggleChip(this)">日系</div>
+      <div class="chip" onclick="toggleChip(this)">复古</div>
+      <div class="chip" onclick="toggleChip(this)">人文</div>
+      <div class="chip" onclick="toggleChip(this)">氛围感</div>
+      <div class="chip" onclick="toggleChip(this)">纪实</div>
+      <div class="chip chip-other" onclick="toggleOther(this,'s_style_other_wrap')">其他</div>
+    </div>
+    <div class="other-input-wrap" id="s_style_other_wrap">
+      <input type="text" id="s_style_other" placeholder="请描述你擅长的风格…" />
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">拍摄主题 <span class="optional">optional</span></div>
+    <div class="chips" id="s_theme">
+      <div class="chip" onclick="toggleChip(this)">日常</div>
+      <div class="chip" onclick="toggleChip(this)">毕业季</div>
+      <div class="chip" onclick="toggleChip(this)">情侣</div>
+      <div class="chip" onclick="toggleChip(this)">换季穿搭</div>
+      <div class="chip" onclick="toggleChip(this)">生日</div>
+      <div class="chip" onclick="toggleChip(this)">旅行</div>
+      <div class="chip chip-other" onclick="toggleOther(this,'s_theme_other_wrap')">其他</div>
+    </div>
+    <div class="other-input-wrap" id="s_theme_other_wrap">
+      <input type="text" id="s_theme_other" placeholder="请描述拍摄主题…" />
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">样片 <span class="optional">optional · 3–6 张代表作</span></div>
+    <div class="upload-area">
+      <input type="file" accept="image/*" multiple onchange="handleUpload(event,'s_previews')" />
+      <div class="upload-icon">＋</div>
+      <div class="upload-text">上传你的代表作<br>这是接单的核心说服力</div>
+      <div class="upload-previews" id="s_previews"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">设备 <span class="optional">optional</span></div>
+    <div class="gear-tags" id="s_gear_tags"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <input type="text" id="s_gear_input" placeholder="如：Sony A7C，回车添加" onkeydown="addGear(event)" style="flex:1" />
+      <button class="stepper-btn" onclick="addGearClick()" style="width:auto;padding:0 14px;font-size:13px">添加</button>
+    </div>
+  </div>
+
+  <div class="section-heading">时间 + 地点</div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 可拍档期</div>
+    <input type="text" id="s_avail" placeholder="如：本月周末 / 每周六下午" />
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 所在地区</div>
+    <input type="text" id="s_city" placeholder="如：北京朝阳 / Singapore / Tokyo" />
+  </div>
+
+  <div class="field">
+    <div class="field-label">是否接异地邀约 <span class="optional">optional</span></div>
+    <div class="chips" id="s_travel">
+      <div class="chip" onclick="toggleChipSingle(this,'s_travel')">仅本地</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_travel')">周边城市可协商</div>
+      <div class="chip" onclick="toggleChipSingle(this,'s_travel')">接异地</div>
+    </div>
+  </div>
+
+  <div class="section-heading">授权要求 + 交付</div>
+
+  <div class="field">
+    <div class="field-label"><span class="required"></span> 希望被委托方授权</div>
+    <div class="chips auth-chips" id="s_auth">
+      <div class="chip" onclick="toggleChip(this)">可发布社交媒体</div>
+      <div class="chip" onclick="toggleChip(this)">可用于作品集</div>
+      <div class="chip" onclick="toggleChip(this)">可用于商业用途</div>
+      <div class="chip" onclick="toggleChip(this)">发布需标记我账号</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">精修张数 <span class="optional">optional</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <label class="toggle-label">
+        <input type="checkbox" id="s_count_enabled" onchange="toggleStepper('s_count_enabled','s_count_row')" />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+      <div class="stepper-row" id="s_count_row" style="opacity:0.35;pointer-events:none">
+        <button class="stepper-btn" onclick="stepNum('s_count_num','s_count_val',-1)">−</button>
+        <span class="stepper-val" id="s_count_val">10</span>
+        <button class="stepper-btn" onclick="stepNum('s_count_num','s_count_val',1)">+</button>
+        <span class="stepper-unit">张</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">交付时间 <span class="optional">optional</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <label class="toggle-label">
+        <input type="checkbox" id="s_delivery_enabled" onchange="toggleStepper('s_delivery_enabled','s_delivery_row')" />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+      <div class="stepper-row" id="s_delivery_row" style="opacity:0.35;pointer-events:none">
+        <button class="stepper-btn" onclick="stepNum('s_delivery_num','s_delivery_val',-1)">−</button>
+        <span class="stepper-val" id="s_delivery_val">7</span>
+        <button class="stepper-btn" onclick="stepNum('s_delivery_num','s_delivery_val',1)">+</button>
+        <span class="stepper-unit">天内</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label">补充说明 <span class="optional">optional</span></div>
+    <textarea id="s_note" rows="3" placeholder="不擅长的风格、有无助理、停车需求…"></textarea>
+  </div>
+
+  <button class="gen-btn" onclick="generateCard('supply')">生成我的摄影师卡片 →</button>
+</div>
+
+<!-- ═══════════════ PREVIEW ═══════════════ -->
+<div class="preview-section" id="previewSection">
+  <div class="preview-label">卡片已生成</div>
+  <div id="generatedCard"></div>
+  <div style="display:flex;gap:10px;margin-top:20px;max-width:480px;margin-left:auto;margin-right:auto;padding:0 20px;">
+    <div onclick="resetForm()" style="flex:1;padding:13px 0;border-radius:6px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid rgba(160,120,80,0.15);background:#fff8f0;color:#9c7860;user-select:none;">重新填写</div>
+    <div id="saveBtnEl" onclick="saveCard()" style="flex:1;padding:13px 0;border-radius:6px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid #FAC775;background:#FAC775;color:#4a3028;user-select:none;">保存图片 ↓</div>
+  </div>
+</div>
+
+<script>
+let currentMode = 'demand';
+
+function setMode(mode) {
+  currentMode = mode;
+  const slider = document.getElementById('modeSlider');
+  const btnD = document.getElementById('btnDemand');
+  const btnS = document.getElementById('btnSupply');
+  const dForm = document.getElementById('demandForm');
+  const sForm = document.getElementById('supplyForm');
+  const preview = document.getElementById('previewSection');
+
+  preview.classList.remove('visible');
+  document.getElementById('generatedCard').innerHTML = '';
+
+  if (mode === 'demand') {
+    slider.classList.remove('supply-mode');
+    slider.classList.add('demand-mode');
+    btnD.classList.add('active'); btnS.classList.remove('active');
+    dForm.classList.add('visible'); sForm.classList.remove('visible');
+  } else {
+    slider.classList.remove('demand-mode');
+    slider.classList.add('supply-mode');
+    btnS.classList.add('active'); btnD.classList.remove('active');
+    sForm.classList.add('visible'); dForm.classList.remove('visible');
+  }
+}
+
+function toggleChip(el) {
+  el.classList.toggle('selected');
+}
+function toggleChipSingle(el, groupId) {
+  const already = el.classList.contains('selected');
+  document.querySelectorAll('#' + groupId + ' .chip').forEach(c => c.classList.remove('selected'));
+  if (!already) el.classList.add('selected');
+}
+let d_count_num = 1;
+let s_count_num = 10;
+let s_delivery_num = 7;
+
+function stepCount(delta) {
+  d_count_num = Math.max(1, Math.min(20, d_count_num + delta));
+  document.getElementById('d_count_val').textContent = d_count_num;
+}
+function stepNum(varName, valId, delta) {
+  if (varName === 's_count_num') {
+    s_count_num = Math.max(1, Math.min(99, s_count_num + delta));
+    document.getElementById(valId).textContent = s_count_num;
+  } else if (varName === 's_delivery_num') {
+    s_delivery_num = Math.max(1, Math.min(60, s_delivery_num + delta));
+    document.getElementById(valId).textContent = s_delivery_num;
+  }
+}
+function toggleStepper(checkId, rowId) {
+  const on = document.getElementById(checkId).checked;
+  const row = document.getElementById(rowId);
+  row.style.opacity = on ? '1' : '0.35';
+  row.style.pointerEvents = on ? 'auto' : 'none';
+}
+function toggleOther(el, wrapId) {
+  el.classList.toggle('selected');
+  document.getElementById(wrapId).classList.toggle('visible', el.classList.contains('selected'));
+}
+
+/* ── Gear tags ── */
+let gearList = [];
+function addGear(e) { if (e.key === 'Enter') { e.preventDefault(); addGearClick(); } }
+function addGearClick() {
+  const input = document.getElementById('s_gear_input');
+  const val = input.value.trim();
+  if (!val) return;
+  gearList.push(val);
+  input.value = '';
+  renderGearTags();
+}
+function removeGear(i) {
+  gearList.splice(i, 1);
+  renderGearTags();
+}
+function renderGearTags() {
+  const c = document.getElementById('s_gear_tags');
+  c.innerHTML = gearList.map((g, i) =>
+    `<div class="gear-tag">${g}<span class="gear-tag-remove" onclick="removeGear(${i})">×</span></div>`
+  ).join('');
+}
+
+/* ── Deletable image upload ── */
+function handleUpload(event, previewId) {
+  const container = document.getElementById(previewId);
+  const existing = container.querySelectorAll('.preview-img-wrap').length;
+  const remaining = 3 - existing;
+  if (remaining <= 0) { event.target.value = ''; return; }
+  const files = Array.from(event.target.files).slice(0, remaining);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-img-wrap';
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'preview-img';
+      const del = document.createElement('div');
+      del.className = 'preview-img-del';
+      del.textContent = '×';
+      del.onclick = () => wrap.remove();
+      wrap.appendChild(img);
+      wrap.appendChild(del);
+      container.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function getSelectedChips(groupId) {
+  return Array.from(document.querySelectorAll('#' + groupId + ' .chip.selected')).map(c => c.textContent.trim());
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+function getPreviewImgs(previewId) {
+  return Array.from(document.querySelectorAll('#' + previewId + ' img'));
+}
+function fermoLogo() {
+  return `<svg width="60" height="16" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg"><text x="6" y="66" font-size="60" font-weight="300" fill="#D4537E" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" letter-spacing="2">fermo<\/text><circle cx="32" cy="15" r="9" fill="#FAC775"\/><\/svg>`;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.style.outline = '2px solid var(--pink-dk)';
+  el.style.borderRadius = '6px';
+  setTimeout(() => { el.style.outline = ''; }, 2000);
+  const err = document.createElement('div');
+  err.className = 'field-error';
+  err.textContent = msg;
+  el.parentNode.insertBefore(err, el.nextSibling);
+  setTimeout(() => err.remove(), 2500);
+}
+
+function clearErrors() {
+  document.querySelectorAll('.field-error').forEach(e => e.remove());
+}
+
+function validateDemand() {
+  clearErrors();
+  const errors = [];
+  if (!getSelectedChips('d_gender').length) errors.push({ id: 'd_gender', msg: '请选择你的性别' });
+  if (!getSelectedChips('d_gender_pref').length) errors.push({ id: 'd_gender_pref', msg: '请选择对摄影师性别的要求' });
+  if (!getVal('d_time')) errors.push({ id: 'd_time', msg: '请填写可拍时间' });
+  if (!getVal('d_city')) errors.push({ id: 'd_city', msg: '请填写地点' });
+  if (!getSelectedChips('d_auth').length) errors.push({ id: 'd_auth', msg: '请选择授权范围' });
+  if (errors.length) { errors.forEach(e => showError(e.id, e.msg)); return false; }
+  return true;
+}
+
+function validateSupply() {
+  clearErrors();
+  const errors = [];
+  if (!getSelectedChips('s_gender').length) errors.push({ id: 's_gender', msg: '请选择你的性别' });
+  if (!getVal('s_avail')) errors.push({ id: 's_avail', msg: '请填写可拍档期' });
+  if (!getVal('s_city')) errors.push({ id: 's_city', msg: '请填写所在地区' });
+  if (!getSelectedChips('s_auth').length) errors.push({ id: 's_auth', msg: '请选择授权要求' });
+  if (errors.length) { errors.forEach(e => showError(e.id, e.msg)); return false; }
+  return true;
+}
+
+function generateCard(mode) {
+  if (mode === 'demand' && !validateDemand()) return;
+  if (mode === 'supply' && !validateSupply()) return;
+
+  const card = document.getElementById('generatedCard');
+  const preview = document.getElementById('previewSection');
+  card.innerHTML = '';
+
+  if (mode === 'demand') {
+    const name = getVal('d_name') || null;
+    const gender = getSelectedChips('d_gender');
+    const genderPref = getSelectedChips('d_gender_pref');
+    const count = d_count_num + ' 人';
+    let styles = getSelectedChips('d_styles').filter(s => s !== '其他');
+    const styleOther = getVal('d_style_other');
+    if (styleOther) styles.push(styleOther);
+    let themes = getSelectedChips('d_theme').filter(s => s !== '其他');
+    const themeOther = getVal('d_theme_other');
+    if (themeOther) themes.push(themeOther);
+    const time = getVal('d_time') || '待定';
+    const city = getVal('d_city') || '未填写';
+    const authUses = getSelectedChips('d_auth');
+    const authConds = getSelectedChips('d_auth_cond');
+    const auth = [...authUses, ...authConds];
+    const note = getVal('d_note');
+    const refImgs = getPreviewImgs('d_previews');
+    const n = refImgs.length;
+
+    const dGrid = `
+      <div class="card-grid">
+        <div class="card-cell"><div class="cell-label">人数</div><div class="cell-val">${count}</div></div>
+        <div class="card-cell"><div class="cell-label">时间</div><div class="cell-val">${time}</div></div>
+        <div class="card-cell"><div class="cell-label">地点</div><div class="cell-val">${city}</div></div>
+        ${genderPref.length ? `<div class="card-cell"><div class="cell-label">摄影师性别</div><div class="cell-val">${genderPref[0]}</div></div>` : ''}
+      </div>`;
+    const dTags = (styles.length || themes.length) ? `
+      <div class="card-tags">
+        ${themes.map(s => `<span class="ctag ctag-pink">${s}</span>`).join('')}
+        ${styles.map(s => `<span class="ctag ctag-yellow">${s}</span>`).join('')}
+      </div>` : '';
+    const dAuth = auth.length ? `<div class="card-auth-line"><strong>授权</strong>${auth.join(' · ')}</div>` : '';
+    const dNote = note ? `<div class="card-auth-line"><strong>补充</strong>${note}</div>` : '';
+
+    let bodyHTML = '';
+    if (n === 0) {
+      bodyHTML = `<div class="card-body" style="position:relative">
+        <div class="card-name">${name || '匿名委托人'}</div>
+        <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
+        ${dGrid}${dTags}${dAuth}${dNote}` + `<div style="position:absolute;bottom:20px;right:16px;font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;font-style:italic;color:#D4537E;opacity:0.07;letter-spacing:0.04em;pointer-events:none;user-select:none;line-height:1">fermo</div>
+      </div>`;
+    } else if (n === 1) {
+      bodyHTML = `<div class="card-body layout-multi">
+        <div class="card-photos-top">
+          <div class="photo-slot"><img src="${refImgs[0].src}" /></div>
+        </div>
+        <div class="card-info-bottom">
+          <div class="card-name">${name || '匿名委托人'}</div>
+          <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
+          ${dGrid}${dTags}${dAuth}${dNote}
+        </div>
+      </div>`;
+    } else {
+      bodyHTML = `<div class="card-body layout-multi">
+        <div class="card-photos-top">
+          ${refImgs.slice(0,3).map(img => `<div class="photo-slot"><img src="${img.src}" /></div>`).join('')}
+        </div>
+        <div class="card-info-bottom">
+          <div class="card-name">${name || '匿名委托人'}</div>
+          <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
+          ${dGrid}${dTags}${dAuth}${dNote}
+        </div>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="gen-card card-demand">
+        <div class="card-top-bar"><div class="card-type-label">委托人</div>${fermoLogo()}</div>
+        <div class="card-stripe"></div>
+        ${bodyHTML}
+        <div class="card-footer"><div class="card-footer-note">欢迎摄影师联系委托人</div></div>
+      </div>`;
+
+  } else {
+    const name = getVal('s_name') || null;
+    const exp = getSelectedChips('s_exp');
+    const gender = getSelectedChips('s_gender');
+    let styles = getSelectedChips('s_styles').filter(s => s !== '其他');
+    const styleOther = getVal('s_style_other');
+    if (styleOther) styles.push(styleOther);
+    let themes = getSelectedChips('s_theme').filter(s => s !== '其他');
+    const themeOther = getVal('s_theme_other');
+    if (themeOther) themes.push(themeOther);
+    const gear = gearList.length ? gearList.join(' · ') : '';
+    const avail = getVal('s_avail') || '待定';
+    const city = getVal('s_city') || '未填写';
+    const travel = getSelectedChips('s_travel');
+    const auth = getSelectedChips('s_auth');
+    const countEnabled = document.getElementById('s_count_enabled').checked;
+    const deliveryEnabled = document.getElementById('s_delivery_enabled').checked;
+    const countNum = countEnabled ? s_count_num + ' 张' : null;
+    const deliveryNum = deliveryEnabled ? s_delivery_num + ' 天内' : null;
+    const note = getVal('s_note');
+    const sampleImgs = getPreviewImgs('s_previews');
+    const ns = sampleImgs.length;
+    const subLine = `${exp.length ? exp[0] : '摄影师'}${gender.length ? ' · ' + gender[0] : ''} · ${city}${travel.length && travel[0] !== '仅本地' ? ' · ' + travel[0] : ''}`;
+
+    const sGrid = `
+      <div class="card-grid">
+        <div class="card-cell"><div class="cell-label">档期</div><div class="cell-val">${avail}</div></div>
+        <div class="card-cell"><div class="cell-label">地区</div><div class="cell-val">${city}</div></div>
+        ${gear ? `<div class="card-cell" style="grid-column:1/-1"><div class="cell-label">设备</div><div class="cell-val">${gear}</div></div>` : ''}
+        ${countNum ? `<div class="card-cell"><div class="cell-label">精修</div><div class="cell-val">${countNum}</div></div>` : ''}
+        ${deliveryNum ? `<div class="card-cell"><div class="cell-label">交付</div><div class="cell-val">${deliveryNum}</div></div>` : ''}
+      </div>`;
+    const sTags = (styles.length || themes.length) ? `
+      <div class="card-tags">
+        ${themes.map(s => `<span class="ctag ctag-green">${s}</span>`).join('')}
+        ${styles.map(s => `<span class="ctag ctag-yellow">${s}</span>`).join('')}
+      </div>` : '';
+    const sAuth = auth.length ? `<div class="card-auth-line"><strong>授权要求</strong>${auth.join(' · ')}</div>` : '';
+    const sNote = note ? `<div class="card-auth-line"><strong>补充</strong>${note}</div>` : '';
+
+    let supplyBodyHTML = '';
+    if (ns === 0) {
+      supplyBodyHTML = `<div class="card-body" style="position:relative">
+        <div class="card-name">${name || '匿名摄影师'}</div>
+        <div class="card-sub">${subLine}</div>
+        ${sGrid}${sTags}${sAuth}${sNote}` + `<div style="position:absolute;bottom:20px;right:16px;font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;font-style:italic;color:#6c9858;opacity:0.08;letter-spacing:0.04em;pointer-events:none;user-select:none;line-height:1">fermo</div>
+      </div>`;
+    } else if (ns === 1) {
+      supplyBodyHTML = `<div class="card-body layout-multi">
+        <div class="card-photos-top">
+          <div class="photo-slot"><img src="${sampleImgs[0].src}" /></div>
+        </div>
+        <div class="card-info-bottom">
+          <div class="card-name">${name || '匿名摄影师'}</div>
+          <div class="card-sub">${subLine}</div>
+          ${sGrid}${sTags}${sAuth}${sNote}
+        </div>
+      </div>`;
+    } else {
+      supplyBodyHTML = `<div class="card-body layout-multi">
+        <div class="card-photos-top">
+          ${sampleImgs.slice(0,3).map(img => `<div class="photo-slot"><img src="${img.src}" /></div>`).join('')}
+        </div>
+        <div class="card-info-bottom">
+          <div class="card-name">${name || '匿名摄影师'}</div>
+          <div class="card-sub">${subLine}</div>
+          ${sGrid}${sTags}${sAuth}${sNote}
+        </div>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="gen-card card-supply">
+        <div class="card-top-bar"><div class="card-type-label">摄影师</div>${fermoLogo()}</div>
+        <div class="card-stripe"></div>
+        ${supplyBodyHTML}
+        <div class="card-footer"><div class="card-footer-note">开放接单，欢迎联系</div></div>
+      </div>`;
+  }
+
+  document.getElementById(mode === 'demand' ? 'demandForm' : 'supplyForm').classList.remove('visible');
+  preview.classList.add('visible');
+  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetForm() {
+  document.getElementById('previewSection').classList.remove('visible');
+  document.getElementById('generatedCard').innerHTML = '';
+  const form = document.getElementById(currentMode === 'demand' ? 'demandForm' : 'supplyForm');
+  form.classList.add('visible');
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function saveCard() {
+  const card = document.querySelector('#generatedCard .gen-card');
+  if (!card) return;
+
+  const btn = document.getElementById('saveBtnEl');
+  const originalText = btn.textContent;
+  btn.textContent = '生成中...';
+  btn.style.opacity = '0.6';
+  btn.style.pointerEvents = 'none';
+
+  const rect = card.getBoundingClientRect();
+  const exportW = 1080;
+  const exportH = Math.round(exportW * rect.height / rect.width);
+  const scale = exportW / rect.width;
+
+  document.fonts.ready.then(() => {
+    html2canvas(card, {
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+      width: rect.width,
+      height: rect.height,
+    }).then(canvas => {
+      const link = document.createElement('a');
+      const mode = currentMode === 'demand' ? 'fermo-委托人' : 'fermo-摄影师';
+      link.download = `${mode}-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+      btn.textContent = originalText;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+    }).catch(err => {
+      console.error(err);
+      btn.textContent = '下载失败，请截图';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
+      }, 2000);
+    });
+  });
+}
+</script>
+</body>
+</html>
