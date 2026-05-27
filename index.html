@@ -1257,6 +1257,59 @@ function generateCard(mode) {
   document.getElementById(mode === 'demand' ? 'demandForm' : 'supplyForm').classList.remove('visible');
   preview.classList.add('visible');
   preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  sendToSheet(mode);
+}
+
+function sendToSheet(mode) {
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwIiejg8IOG2nKQhnZecQVmPdssfzweiR9NtmsYCpEcQzdakn_kqOcU-Td6YUdqmYdUow/exec';
+  let data = { type: mode };
+
+  if (mode === 'demand') {
+    data.name     = document.getElementById('d_name').value.trim() || '匿名委托人';
+    data.gender   = getSelectedChips('d_gender').join(', ');
+    data.genderPref = getSelectedChips('d_gender_pref').join(', ');
+    data.count    = d_count_num + ' 人';
+    data.time     = document.getElementById('d_time').value.trim();
+    data.city     = document.getElementById('d_city').value.trim();
+    let themes    = getSelectedChips('d_theme').filter(s => s !== '其他');
+    const to      = document.getElementById('d_theme_other').value.trim();
+    if (to) themes.push(to);
+    data.theme    = themes.join(', ');
+    let styles    = getSelectedChips('d_styles').filter(s => s !== '其他');
+    const so      = document.getElementById('d_style_other').value.trim();
+    if (so) styles.push(so);
+    data.styles   = styles.join(', ');
+    data.auth     = [...getSelectedChips('d_auth'), ...getSelectedChips('d_auth_cond')].join(', ');
+    data.note     = document.getElementById('d_note').value.trim();
+  } else {
+    data.name     = document.getElementById('s_name').value.trim() || '匿名摄影师';
+    data.gender   = getSelectedChips('s_gender').join(', ');
+    data.exp      = getSelectedChips('s_exp').join(', ');
+    data.city     = document.getElementById('s_city').value.trim();
+    data.avail    = document.getElementById('s_avail').value.trim();
+    data.gear     = gearList.join(', ');
+    let styles    = getSelectedChips('s_styles').filter(s => s !== '其他');
+    const so      = document.getElementById('s_style_other').value.trim();
+    if (so) styles.push(so);
+    data.styles   = styles.join(', ');
+    let themes    = getSelectedChips('s_theme').filter(s => s !== '其他');
+    const to      = document.getElementById('s_theme_other').value.trim();
+    if (to) themes.push(to);
+    data.themes   = themes.join(', ');
+    const ce      = document.getElementById('s_count_enabled').checked;
+    const de      = document.getElementById('s_delivery_enabled').checked;
+    data.countNum    = ce ? s_count_num + ' 张' : '';
+    data.deliveryNum = de ? s_delivery_num + ' 天内' : '';
+    data.auth     = getSelectedChips('s_auth').join(', ');
+    data.note     = document.getElementById('s_note').value.trim();
+  }
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).catch(() => {}); // 静默失败，不影响用户体验
 }
 
 function resetForm() {
