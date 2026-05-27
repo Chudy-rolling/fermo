@@ -1291,18 +1291,24 @@ function saveCard() {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile) {
-        // 移动端：打开新标签页显示图片，用户长按保存
-        const win = window.open('', '_blank');
-        if (win) {
-          win.document.write('<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>保存图片</title><style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;height:auto}p{color:#fff;font-family:sans-serif;font-size:14px;margin-top:16px;text-align:center;opacity:0.7}</style></head><body><img src="' + dataUrl + '" /><p>长按图片 → 保存到相册</p></body></html>');
-          win.document.close();
-        } else {
-          // 若弹窗被阻止，直接用 a 标签
-          const link = document.createElement('a');
-          link.href = dataUrl;
-          link.download = filename;
-          link.click();
-        }
+        // 移动端：在当前页面显示全屏遮罩，长按图片保存
+        const overlay = document.createElement('div');
+        overlay.id = 'saveOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+        const closeBtn = document.createElement('div');
+        closeBtn.textContent = '关闭';
+        closeBtn.style.cssText = 'margin-top:16px;padding:10px 32px;border:1.5px solid rgba(255,255,255,0.4);border-radius:6px;color:rgba(255,255,255,0.7);font-family:Jost,sans-serif;font-size:13px;cursor:pointer;';
+        closeBtn.onclick = function(){ document.getElementById('saveOverlay').remove(); };
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.style.cssText = 'max-width:100%;max-height:75vh;border-radius:8px;display:block;';
+        const tip = document.createElement('p');
+        tip.textContent = '长按图片 → 存储到相册';
+        tip.style.cssText = 'color:#fff;font-family:Jost,sans-serif;font-size:15px;margin-top:20px;text-align:center;line-height:1.6;';
+        overlay.appendChild(img);
+        overlay.appendChild(tip);
+        overlay.appendChild(closeBtn);
+        document.body.appendChild(overlay);
       } else {
         // 桌面端：直接下载
         const link = document.createElement('a');
