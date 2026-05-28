@@ -1304,10 +1304,16 @@ function sendToSheet(mode) {
     data.note     = document.getElementById('s_note').value.trim();
   }
 
-  // 用 GET + URLSearchParams 绕过 CORS 限制
+  // 双保险：同时用 fetch 和 img 两种方式确保移动端也能发送
   const params = new URLSearchParams(data);
-  const img = new Image();
-  img.src = SHEET_URL + '?' + params.toString();
+  const url = SHEET_URL + '?' + params.toString();
+  
+  // 方式1: fetch（桌面端和大部分手机）
+  fetch(url, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+  
+  // 方式2: Image（兜底，Safari/iOS 更可靠）
+  const tracker = new Image();
+  tracker.src = url;
 }
 
 function resetForm() {
