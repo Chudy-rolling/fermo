@@ -1436,13 +1436,10 @@ function sendToSheet(mode) {
     data.notes        = document.getElementById('s_note').value.trim();
   }
 
-  // POST 发送
-  fetch(SHEET_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  }).catch(() => {});
+  // GET 发送，配合 doGet，用 no-cors 图片请求绕过 CORS
+  const params = new URLSearchParams(data);
+  const img = new Image();
+  img.src = SHEET_URL + '?' + params.toString();
 }
 
 function resetForm() {
