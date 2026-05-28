@@ -1436,19 +1436,14 @@ function sendToSheet(mode) {
     data.notes        = document.getElementById('s_note').value.trim();
   }
 
-  // JSONP 发送，绕过所有浏览器 CORS 限制（Safari/微信/Chrome 全兼容）
-  var cbName = 'fermoCallback_' + Date.now();
-  window[cbName] = function() {
-    try { document.body.removeChild(script); } catch(e) {}
-    delete window[cbName];
-  };
-  data.callback = cbName;
+  // fetch GET，Worker 处理 CORS，全平台兼容
   var queryStr = Object.keys(data).map(function(k) {
     return encodeURIComponent(k) + '=' + encodeURIComponent(data[k] || '');
   }).join('&');
-  var script = document.createElement('script');
-  script.src = SHEET_URL + '?' + queryStr;
-  document.body.appendChild(script);
+  fetch(SHEET_URL + '?' + queryStr, {
+    method: 'GET',
+    mode: 'cors'
+  }).catch(function() {});
 }
 
 function resetForm() {
