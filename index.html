@@ -487,7 +487,6 @@
   .gen-card.has-portrait {
     position: relative;
   }
-  /* topbar 和 stripe 绝对定位叠在图片上，图片区铺满整张卡片 */
   .gen-card.has-portrait .card-top-bar {
     position: absolute; top: 0; left: 0; right: 0; z-index: 3;
     border-bottom: none;
@@ -1282,7 +1281,7 @@ function generateCard(mode) {
     }
 
     card.innerHTML = `
-      <div class="gen-card card-demand">
+      <div class="gen-card card-demand${n === 1 ? ' has-portrait' : ''}">
         <div class="card-top-bar"><div class="card-type-label">委托人</div>${fermoLogo()}</div>
         <div class="card-stripe"></div>
         ${bodyHTML}
