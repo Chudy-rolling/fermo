@@ -1436,13 +1436,13 @@ function sendToSheet(mode) {
     data.notes        = document.getElementById('s_note').value.trim();
   }
 
-  // fetch GET，Worker 处理 CORS，全平台兼容
+  // fetch no-cors GET，不触发 preflight，Safari/Chrome/微信全兼容
   var queryStr = Object.keys(data).map(function(k) {
     return encodeURIComponent(k) + '=' + encodeURIComponent(data[k] || '');
   }).join('&');
   fetch(SHEET_URL + '?' + queryStr, {
     method: 'GET',
-    mode: 'cors'
+    mode: 'no-cors'
   }).catch(function() {});
 }
 
