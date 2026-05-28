@@ -1436,24 +1436,19 @@ function sendToSheet(mode) {
     data.notes        = document.getElementById('s_note').value.trim();
   }
 
-  // 构建 GET 参数，兼容不支持 URLSearchParams 的旧浏览器
+  // JSONP 发送，绕过所有浏览器 CORS 限制（Safari/微信/Chrome 全兼容）
+  var cbName = 'fermoCallback_' + Date.now();
+  window[cbName] = function() {
+    try { document.body.removeChild(script); } catch(e) {}
+    delete window[cbName];
+  };
+  data.callback = cbName;
   var queryStr = Object.keys(data).map(function(k) {
     return encodeURIComponent(k) + '=' + encodeURIComponent(data[k] || '');
   }).join('&');
-  var fullUrl = SHEET_URL + '?' + queryStr;
-
-  // 优先用 fetch，失败则降级到 XHR（兼容微信 WebView）
-  if (typeof fetch !== 'undefined') {
-    fetch(fullUrl, { method: 'GET', mode: 'no-cors' }).catch(function() {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', fullUrl, true);
-      xhr.send();
-    });
-  } else {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', fullUrl, true);
-    xhr.send();
-  }
+  var script = document.createElement('script');
+  script.src = SHEET_URL + '?' + queryStr;
+  document.body.appendChild(script);
 }
 
 function resetForm() {
