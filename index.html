@@ -483,7 +483,53 @@
     width: 100%; height: 100%; object-fit: cover; display: block;
   }
 
-  /* ── Layout 1张/2-3张：上图下文 ── */
+  /* ── Layout 全屏叠字（竖图 3:4）── */
+  .card-body.layout-portrait {
+    padding: 0; flex: 1; position: relative; overflow: hidden;
+  }
+  .layout-portrait .photo-bg {
+    position: absolute; inset: 0;
+  }
+  .layout-portrait .photo-bg img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .layout-portrait .photo-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(40,28,20,0.92));
+    padding: 14px 12px 8px;
+  }
+  .layout-portrait .ov-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 2px;
+  }
+  .layout-portrait .ov-sub {
+    font-size: 10px; color: rgba(255,255,255,0.75);
+    letter-spacing: 0.04em; margin-bottom: 8px;
+  }
+  .layout-portrait .ov-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;
+  }
+  .layout-portrait .ov-cell {
+    background: rgba(255,255,255,0.12); border-radius: 3px; padding: 4px 6px;
+  }
+  .layout-portrait .ov-clabel {
+    font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6); margin-bottom: 1px;
+  }
+  .layout-portrait .ov-cval {
+    font-size: 11px; font-weight: 600; color: #fff;
+  }
+  .layout-portrait .ov-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+  }
+  .layout-portrait .ov-tag-y { background: #FAC775; color: #4a3028; font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+  .layout-portrait .ov-tag-p { background: #f5b8c8; color: #4a3028; font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+  .layout-portrait .ov-tag-g { background: #a8c890; color: #3c4028; font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+  .layout-portrait .ov-auth {
+    font-size: 9px; color: rgba(255,255,255,0.55);
+    border-top: 0.5px solid rgba(255,255,255,0.2);
+    padding-top: 4px; margin-top: 2px;
+  }
   .card-body.layout-multi {
     padding: 0; flex-direction: column; gap: 0;
   }
@@ -636,8 +682,8 @@
   <div class="section-heading">关于我</div>
 
   <div class="field">
-    <div class="field-label">昵称 <span class="optional">optional</span></div>
-    <input type="text" id="d_name" placeholder="小红书 / IG 账号" />
+    <div class="field-label"><span class="required"></span> 小红书账号名</div>
+    <input type="text" id="d_name" maxlength="20" placeholder="请填写准确的小红书账号名，方便摄影师找到你哦" />
   </div>
 
   <div class="field">
@@ -684,7 +730,7 @@
       <div class="chip chip-other" onclick="toggleOther(this,'d_theme_other_wrap')">其他</div>
     </div>
     <div class="other-input-wrap" id="d_theme_other_wrap">
-      <input type="text" id="d_theme_other" placeholder="请描述拍摄主题…" />
+      <input type="text" id="d_theme_other" maxlength="15" placeholder="请描述拍摄主题… (15字以内)" />
     </div>
   </div>
 
@@ -702,16 +748,16 @@
       <div class="chip chip-other" onclick="toggleOther(this,'d_style_other_wrap')">其他</div>
     </div>
     <div class="other-input-wrap" id="d_style_other_wrap">
-      <input type="text" id="d_style_other" placeholder="请描述你想要的风格…" />
+      <input type="text" id="d_style_other" maxlength="15" placeholder="请描述你想要的风格… (15字以内)" />
     </div>
   </div>
 
   <div class="field">
-    <div class="field-label">参考图 <span class="optional">optional · 1–3 张</span></div>
+    <div class="field-label">参考图 <span class="optional">optional</span></div>
     <div class="upload-area" id="d_refUpload">
-      <input type="file" accept="image/*" multiple onchange="handleUpload(event,'d_previews')" />
+      <input type="file" accept="image/*" onchange="handleUpload(event,'d_previews')" />
       <div class="upload-icon">＋</div>
-      <div class="upload-text">上传喜欢的风格参考<br>一张图顶千言万语</div>
+      <div class="upload-text">上传1张竖图（3:4）<br>建议尺寸 1080×1440</div>
       <div class="upload-previews" id="d_previews"></div>
     </div>
   </div>
@@ -720,12 +766,12 @@
 
   <div class="field">
     <div class="field-label"><span class="required"></span> 可拍时间</div>
-    <input type="text" id="d_time" placeholder="如：本月周末 / 12月15日后" />
+    <input type="text" id="d_time" maxlength="20" placeholder="如：本月周末 / 12月15日后" />
   </div>
 
   <div class="field">
     <div class="field-label"><span class="required"></span> 地点</div>
-    <input type="text" id="d_city" placeholder="如：上海静安 / Bangkok / NYC" />
+    <input type="text" id="d_city" maxlength="20" placeholder="如：上海静安 / Bangkok / NYC" />
   </div>
 
   <div class="section-heading">授权限制</div>
@@ -749,11 +795,26 @@
   </div>
 
   <div class="field">
-    <div class="field-label">补充说明 <span class="optional">optional</span></div>
-    <textarea id="d_note" rows="3" placeholder="特殊要求、不喜欢的风格、其他细节…"></textarea>
+    <div class="field-label">预算区间 <span class="optional">optional</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" id="d_budget_min" maxlength="6" placeholder="最低" style="flex:1;min-width:0" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+      <span style="color:var(--text-3);font-size:13px;flex-shrink:0">—</span>
+      <input type="text" id="d_budget_max" maxlength="6" placeholder="最高" style="flex:1;min-width:0" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+      <select id="d_currency" style="flex-shrink:0;width:80px;padding:11px 6px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-family:'Jost',sans-serif;font-size:12px;">
+        <option value="USD">$/时</option>
+        <option value="元">元/时</option>
+      </select>
+    </div>
   </div>
 
-  <button class="gen-btn" onclick="generateCard('demand')">生成我的委托卡片 →</button>
+  <div class="field">
+    <div class="field-label">补充说明 <span class="optional">optional</span></div>
+    <textarea id="d_note" rows="3" maxlength="60" placeholder="特殊要求、不喜欢的风格、其他细节… (60字以内)"></textarea>
+  </div>
+
+  <div style="margin-top:32px">
+    <div onclick="generateCard('demand')" class="gen-btn">生成我的委托卡片 →</div>
+  </div>
 </div>
 
 <!-- ═══════════════ SUPPLY FORM ═══════════════ -->
@@ -762,8 +823,8 @@
   <div class="section-heading">关于我</div>
 
   <div class="field">
-    <div class="field-label">昵称 <span class="optional">optional</span></div>
-    <input type="text" id="s_name" placeholder="小红书 / IG 账号" />
+    <div class="field-label"><span class="required"></span> 小红书账号名</div>
+    <input type="text" id="s_name" maxlength="20" placeholder="请填写准确的小红书账号名，方便委托人找到你哦" />
   </div>
 
   <div class="field">
@@ -801,7 +862,7 @@
       <div class="chip chip-other" onclick="toggleOther(this,'s_style_other_wrap')">其他</div>
     </div>
     <div class="other-input-wrap" id="s_style_other_wrap">
-      <input type="text" id="s_style_other" placeholder="请描述你擅长的风格…" />
+      <input type="text" id="s_style_other" maxlength="15" placeholder="请描述你擅长的风格… (15字以内)" />
     </div>
   </div>
 
@@ -817,16 +878,16 @@
       <div class="chip chip-other" onclick="toggleOther(this,'s_theme_other_wrap')">其他</div>
     </div>
     <div class="other-input-wrap" id="s_theme_other_wrap">
-      <input type="text" id="s_theme_other" placeholder="请描述拍摄主题…" />
+      <input type="text" id="s_theme_other" maxlength="15" placeholder="请描述拍摄主题… (15字以内)" />
     </div>
   </div>
 
   <div class="field">
-    <div class="field-label">样片 <span class="optional">optional · 3–6 张代表作</span></div>
+    <div class="field-label">样片 <span class="optional">optional</span></div>
     <div class="upload-area">
-      <input type="file" accept="image/*" multiple onchange="handleUpload(event,'s_previews')" />
+      <input type="file" accept="image/*" onchange="handleUpload(event,'s_previews')" />
       <div class="upload-icon">＋</div>
-      <div class="upload-text">上传你的代表作<br>这是接单的核心说服力</div>
+      <div class="upload-text">上传1张竖图（3:4）<br>建议尺寸 1080×1440</div>
       <div class="upload-previews" id="s_previews"></div>
     </div>
   </div>
@@ -835,7 +896,7 @@
     <div class="field-label">设备 <span class="optional">optional</span></div>
     <div class="gear-tags" id="s_gear_tags"></div>
     <div style="display:flex;gap:8px;margin-top:6px">
-      <input type="text" id="s_gear_input" placeholder="如：Sony A7C，回车添加" onkeydown="addGear(event)" style="flex:1" />
+      <input type="text" id="s_gear_input" maxlength="30" placeholder="如：Sony A7C，回车添加" onkeydown="addGear(event)" style="flex:1" />
       <button class="stepper-btn" onclick="addGearClick()" style="width:auto;padding:0 14px;font-size:13px">添加</button>
     </div>
   </div>
@@ -844,12 +905,12 @@
 
   <div class="field">
     <div class="field-label"><span class="required"></span> 可拍档期</div>
-    <input type="text" id="s_avail" placeholder="如：本月周末 / 每周六下午" />
+    <input type="text" id="s_avail" maxlength="20" placeholder="如：本月周末 / 每周六下午" />
   </div>
 
   <div class="field">
     <div class="field-label"><span class="required"></span> 所在地区</div>
-    <input type="text" id="s_city" placeholder="如：北京朝阳 / Singapore / Tokyo" />
+    <input type="text" id="s_city" maxlength="20" placeholder="如：北京朝阳 / Singapore / Tokyo" />
   </div>
 
   <div class="field">
@@ -906,20 +967,36 @@
   </div>
 
   <div class="field">
-    <div class="field-label">补充说明 <span class="optional">optional</span></div>
-    <textarea id="s_note" rows="3" placeholder="不擅长的风格、有无助理、停车需求…"></textarea>
+    <div class="field-label">报价 <span class="optional">optional</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" id="s_price_min" maxlength="6" placeholder="如：300" style="flex:1;min-width:0" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+      <select id="s_currency" style="flex-shrink:0;width:80px;padding:11px 6px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-family:'Jost',sans-serif;font-size:12px;">
+        <option value="USD">$/时</option>
+        <option value="元">元/时</option>
+      </select>
+      <span style="color:var(--text-3);font-size:12px;flex-shrink:0">起拍</span>
+      <input type="text" id="s_price_max" maxlength="2" placeholder="2" style="width:48px;min-width:0" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+      <span style="color:var(--text-3);font-size:12px;flex-shrink:0">小时</span>
+    </div>
   </div>
 
-  <button class="gen-btn" onclick="generateCard('supply')">生成我的摄影师卡片 →</button>
+  <div class="field">
+    <div class="field-label">补充说明 <span class="optional">optional</span></div>
+    <textarea id="s_note" rows="3" maxlength="60" placeholder="不擅长的风格、有无助理、停车需求… (60字以内)"></textarea>
+  </div>
+
+  <div style="margin-top:32px">
+    <div onclick="generateCard('supply')" class="gen-btn">生成我的摄影师卡片 →</div>
+  </div>
 </div>
 
 <!-- ═══════════════ PREVIEW ═══════════════ -->
 <div class="preview-section" id="previewSection">
   <div class="preview-label">卡片已生成</div>
   <div id="generatedCard"></div>
-  <div style="display:flex;gap:10px;margin-top:20px;max-width:480px;margin-left:auto;margin-right:auto;padding:0 20px;">
-    <div onclick="resetForm()" style="flex:1;padding:13px 0;border-radius:6px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid rgba(160,120,80,0.15);background:#fff8f0;color:#9c7860;user-select:none;">重新填写</div>
-    <div id="saveBtnEl" onclick="saveCard()" style="flex:1;padding:13px 0;border-radius:6px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid #FAC775;background:#FAC775;color:#4a3028;user-select:none;">保存图片 ↓</div>
+  <div style="display:flex;gap:10px;margin-top:20px;width:100%;box-sizing:border-box;padding:0 20px;">
+    <div onclick="resetForm()" style="flex:1;padding:14px 0;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid #e8d8c8;background:#fff8f0;color:#9c7860;user-select:none;-webkit-tap-highlight-color:transparent;">重新填写</div>
+    <div id="saveBtnEl" onclick="saveCard()" style="flex:1;padding:14px 0;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;text-align:center;border:1.5px solid #FAC775;background:#FAC775;color:#4a3028;user-select:none;-webkit-tap-highlight-color:transparent;">保存图片 ↓</div>
   </div>
 </div>
 
@@ -1012,28 +1089,29 @@ function renderGearTags() {
 /* ── Deletable image upload ── */
 function handleUpload(event, previewId) {
   const container = document.getElementById(previewId);
-  const existing = container.querySelectorAll('.preview-img-wrap').length;
-  const remaining = 3 - existing;
-  if (remaining <= 0) { event.target.value = ''; return; }
-  const files = Array.from(event.target.files).slice(0, remaining);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const wrap = document.createElement('div');
-      wrap.className = 'preview-img-wrap';
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.className = 'preview-img';
-      const del = document.createElement('div');
-      del.className = 'preview-img-del';
-      del.textContent = '×';
-      del.onclick = () => wrap.remove();
-      wrap.appendChild(img);
-      wrap.appendChild(del);
-      container.appendChild(wrap);
+  // 只允许1张，有了就先清空
+  container.innerHTML = '';
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wrap = document.createElement('div');
+    wrap.className = 'preview-img-wrap';
+    const img = document.createElement('img');
+    img.src = e.target.result;
+    img.className = 'preview-img';
+    img.onload = () => {
+      wrap.dataset.ratio = (img.naturalWidth / img.naturalHeight).toFixed(2);
     };
-    reader.readAsDataURL(file);
-  });
+    const del = document.createElement('div');
+    del.className = 'preview-img-del';
+    del.textContent = '×';
+    del.onclick = () => wrap.remove();
+    wrap.appendChild(img);
+    wrap.appendChild(del);
+    container.appendChild(wrap);
+  };
+  reader.readAsDataURL(file);
   event.target.value = '';
 }
 
@@ -1073,6 +1151,7 @@ function clearErrors() {
 function validateDemand() {
   clearErrors();
   const errors = [];
+  if (!getVal('d_name')) errors.push({ id: 'd_name', msg: '请填写小红书账号名' });
   if (!getSelectedChips('d_gender').length) errors.push({ id: 'd_gender', msg: '请选择你的性别' });
   if (!getSelectedChips('d_gender_pref').length) errors.push({ id: 'd_gender_pref', msg: '请选择对摄影师性别的要求' });
   if (!getVal('d_time')) errors.push({ id: 'd_time', msg: '请填写可拍时间' });
@@ -1084,6 +1163,7 @@ function validateDemand() {
 function validateSupply() {
   clearErrors();
   const errors = [];
+  if (!getVal('s_name')) errors.push({ id: 's_name', msg: '请填写小红书账号名' });
   if (!getSelectedChips('s_gender').length) errors.push({ id: 's_gender', msg: '请选择你的性别' });
   if (!getVal('s_avail')) errors.push({ id: 's_avail', msg: '请填写可拍档期' });
   if (!getVal('s_city')) errors.push({ id: 's_city', msg: '请填写所在地区' });
@@ -1117,6 +1197,10 @@ function generateCard(mode) {
     const authConds = getSelectedChips('d_auth_cond');
     const auth = [...authUses, ...authConds];
     const note = getVal('d_note');
+    const budgetMin = getVal('d_budget_min');
+    const budgetMax = getVal('d_budget_max');
+    const dCurrency = document.getElementById('d_currency')?.value || '元';
+    const budget = (budgetMin || budgetMax) ? (budgetMin||'') + (budgetMin&&budgetMax?' — ':'') + (budgetMax||'') + ' ' + dCurrency + '/小时' : '';
     const refImgs = getPreviewImgs('d_previews');
     const n = refImgs.length;
 
@@ -1126,6 +1210,7 @@ function generateCard(mode) {
         <div class="card-cell"><div class="cell-label">时间</div><div class="cell-val">${time}</div></div>
         <div class="card-cell"><div class="cell-label">地点</div><div class="cell-val">${city}</div></div>
         ${genderPref.length ? `<div class="card-cell"><div class="cell-label">摄影师性别</div><div class="cell-val">${genderPref[0]}</div></div>` : ''}
+        ${budget ? `<div class="card-cell"><div class="cell-label">预算</div><div class="cell-val">${budget}</div></div>` : ''}
       </div>`;
     const dTags = (styles.length || themes.length) ? `
       <div class="card-tags">
@@ -1138,19 +1223,26 @@ function generateCard(mode) {
     let bodyHTML = '';
     if (n === 0) {
       bodyHTML = `<div class="card-body" style="position:relative">
-        <div class="card-name">${name || '匿名委托人'}</div>
+        <div class="card-name">${(name ? '@' + name : '匿名委托人')}</div>
         <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
         ${dGrid}${dTags}${dAuth}${dNote}` + `<div style="position:absolute;bottom:20px;right:16px;font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;font-style:italic;color:#D4537E;opacity:0.07;letter-spacing:0.04em;pointer-events:none;user-select:none;line-height:1">fermo</div>
       </div>`;
     } else if (n === 1) {
-      bodyHTML = `<div class="card-body layout-multi">
-        <div class="card-photos-top">
-          <div class="photo-slot"><img src="${refImgs[0].src}" /></div>
-        </div>
-        <div class="card-info-bottom">
-          <div class="card-name">${name || '匿名委托人'}</div>
-          <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
-          ${dGrid}${dTags}${dAuth}${dNote}
+      const dTagsHTML = (styles.length||themes.length) ? '<div class="ov-tags">' + themes.map(s=>'<span class="ov-tag-p">'+s+'</span>').join('') + styles.map(s=>'<span class="ov-tag-y">'+s+'</span>').join('') + '</div>' : '';
+      const dAuthHTML = auth.length ? '<div class="ov-auth">授权 · ' + auth.join(' · ') + '</div>' : '';
+      bodyHTML = `<div class="card-body layout-portrait">
+        <div class="photo-bg"><img src="${refImgs[0].src}" /></div>
+        <div class="photo-overlay">
+          <div class="ov-name">${(name ? '@' + name : '匿名委托人')}</div>
+          <div class="ov-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
+          <div class="ov-grid">
+            <div class="ov-cell"><div class="ov-clabel">人数</div><div class="ov-cval">${count}</div></div>
+            <div class="ov-cell"><div class="ov-clabel">时间</div><div class="ov-cval">${time}</div></div>
+            <div class="ov-cell"><div class="ov-clabel">地点</div><div class="ov-cval">${city}</div></div>
+            ${genderPref.length ? '<div class="ov-cell"><div class="ov-clabel">摄影师性别</div><div class="ov-cval">'+genderPref[0]+'</div></div>' : ''}
+            ${budget ? '<div class="ov-cell"><div class="ov-clabel">预算</div><div class="ov-cval">'+budget+'</div></div>' : ''}
+          </div>
+          ${dTagsHTML}${dAuthHTML}
         </div>
       </div>`;
     } else {
@@ -1159,7 +1251,7 @@ function generateCard(mode) {
           ${refImgs.slice(0,3).map(img => `<div class="photo-slot"><img src="${img.src}" /></div>`).join('')}
         </div>
         <div class="card-info-bottom">
-          <div class="card-name">${name || '匿名委托人'}</div>
+          <div class="card-name">${(name ? '@' + name : '匿名委托人')}</div>
           <div class="card-sub">委托人 · ${city}${gender.length ? ' · ' + gender[0] : ''}</div>
           ${dGrid}${dTags}${dAuth}${dNote}
         </div>
@@ -1194,6 +1286,10 @@ function generateCard(mode) {
     const countNum = countEnabled ? s_count_num + ' 张' : null;
     const deliveryNum = deliveryEnabled ? s_delivery_num + ' 天内' : null;
     const note = getVal('s_note');
+    const priceMin = getVal('s_price_min');
+    const priceMax = getVal('s_price_max');
+    const sCurrency = document.getElementById('s_currency')?.value || '元';
+    const price = (priceMin || priceMax) ? (priceMin ? priceMin+' '+sCurrency+'/小时' : '') + (priceMax ? ' 起拍 '+priceMax+' 小时' : '') : '';
     const sampleImgs = getPreviewImgs('s_previews');
     const ns = sampleImgs.length;
     const subLine = `${exp.length ? exp[0] : '摄影师'}${gender.length ? ' · ' + gender[0] : ''} · ${city}${travel.length && travel[0] !== '仅本地' ? ' · ' + travel[0] : ''}`;
@@ -1203,6 +1299,7 @@ function generateCard(mode) {
         <div class="card-cell"><div class="cell-label">档期</div><div class="cell-val">${avail}</div></div>
         <div class="card-cell"><div class="cell-label">地区</div><div class="cell-val">${city}</div></div>
         ${gear ? `<div class="card-cell" style="grid-column:1/-1"><div class="cell-label">设备</div><div class="cell-val">${gear}</div></div>` : ''}
+        ${price ? `<div class="card-cell"><div class="cell-label">报价</div><div class="cell-val">${price}</div></div>` : ''}
         ${countNum ? `<div class="card-cell"><div class="cell-label">精修</div><div class="cell-val">${countNum}</div></div>` : ''}
         ${deliveryNum ? `<div class="card-cell"><div class="cell-label">交付</div><div class="cell-val">${deliveryNum}</div></div>` : ''}
       </div>`;
@@ -1217,19 +1314,25 @@ function generateCard(mode) {
     let supplyBodyHTML = '';
     if (ns === 0) {
       supplyBodyHTML = `<div class="card-body" style="position:relative">
-        <div class="card-name">${name || '匿名摄影师'}</div>
+        <div class="card-name">${(name ? '@' + name : '匿名摄影师')}</div>
         <div class="card-sub">${subLine}</div>
         ${sGrid}${sTags}${sAuth}${sNote}` + `<div style="position:absolute;bottom:20px;right:16px;font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;font-style:italic;color:#6c9858;opacity:0.08;letter-spacing:0.04em;pointer-events:none;user-select:none;line-height:1">fermo</div>
       </div>`;
     } else if (ns === 1) {
-      supplyBodyHTML = `<div class="card-body layout-multi">
-        <div class="card-photos-top">
-          <div class="photo-slot"><img src="${sampleImgs[0].src}" /></div>
-        </div>
-        <div class="card-info-bottom">
-          <div class="card-name">${name || '匿名摄影师'}</div>
-          <div class="card-sub">${subLine}</div>
-          ${sGrid}${sTags}${sAuth}${sNote}
+      const sTagsHTML = (styles.length||themes.length) ? '<div class="ov-tags">' + themes.map(s=>'<span class="ov-tag-g">'+s+'</span>').join('') + styles.map(s=>'<span class="ov-tag-y">'+s+'</span>').join('') + '</div>' : '';
+      const sAuthHTML = auth.length ? '<div class="ov-auth">授权 · ' + auth.join(' · ') + '</div>' : '';
+      supplyBodyHTML = `<div class="card-body layout-portrait">
+        <div class="photo-bg"><img src="${sampleImgs[0].src}" /></div>
+        <div class="photo-overlay">
+          <div class="ov-name">${(name ? '@' + name : '匿名摄影师')}</div>
+          <div class="ov-sub">${subLine}</div>
+          <div class="ov-grid">
+            <div class="ov-cell"><div class="ov-clabel">档期</div><div class="ov-cval">${avail}</div></div>
+            <div class="ov-cell"><div class="ov-clabel">地区</div><div class="ov-cval">${city}</div></div>
+            ${countNum ? '<div class="ov-cell"><div class="ov-clabel">精修</div><div class="ov-cval">'+countNum+'</div></div>' : ''}
+            ${deliveryNum ? '<div class="ov-cell"><div class="ov-clabel">交付</div><div class="ov-cval">'+deliveryNum+'</div></div>' : ''}
+          </div>
+          ${sTagsHTML}${sAuthHTML}
         </div>
       </div>`;
     } else {
@@ -1238,7 +1341,7 @@ function generateCard(mode) {
           ${sampleImgs.slice(0,3).map(img => `<div class="photo-slot"><img src="${img.src}" /></div>`).join('')}
         </div>
         <div class="card-info-bottom">
-          <div class="card-name">${name || '匿名摄影师'}</div>
+          <div class="card-name">${(name ? '@' + name : '匿名摄影师')}</div>
           <div class="card-sub">${subLine}</div>
           ${sGrid}${sTags}${sAuth}${sNote}
         </div>
@@ -1280,6 +1383,10 @@ function sendToSheet(mode) {
     if (so) styles.push(so);
     data.styles   = styles.join(', ');
     data.auth     = [...getSelectedChips('d_auth'), ...getSelectedChips('d_auth_cond')].join(', ');
+    const bMin = document.getElementById('d_budget_min').value.trim();
+    const bMax = document.getElementById('d_budget_max').value.trim();
+    const dCur = document.getElementById('d_currency')?.value || '元';
+    data.budget   = (bMin||bMax) ? (bMin||'')+(bMin&&bMax?' — ':' ')+(bMax||'')+' '+dCur+'/小时' : '';
     data.note     = document.getElementById('d_note').value.trim();
   } else {
     data.name     = document.getElementById('s_name').value.trim() || '匿名摄影师';
@@ -1301,19 +1408,24 @@ function sendToSheet(mode) {
     data.countNum    = ce ? s_count_num + ' 张' : '';
     data.deliveryNum = de ? s_delivery_num + ' 天内' : '';
     data.auth     = getSelectedChips('s_auth').join(', ');
+    const pMin = document.getElementById('s_price_min').value.trim();
+    const pMax = document.getElementById('s_price_max').value.trim();
+    const sCur = document.getElementById('s_currency')?.value || '元';
+    data.price    = (pMin||pMax) ? (pMin ? pMin+' '+sCur+'/小时' : '') + (pMax ? ' 起拍 '+pMax+' 小时' : '') : '';
     data.note     = document.getElementById('s_note').value.trim();
   }
 
-  // 双保险：同时用 fetch 和 img 两种方式确保移动端也能发送
   const params = new URLSearchParams(data);
   const url = SHEET_URL + '?' + params.toString();
-  
-  // 方式1: fetch（桌面端和大部分手机）
-  fetch(url, { method: 'GET', mode: 'no-cors' }).catch(() => {});
-  
-  // 方式2: Image（兜底，Safari/iOS 更可靠）
-  const tracker = new Image();
-  tracker.src = url;
+
+  // 用 iframe 静默发送，绕过移动端 CORS 限制
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  setTimeout(() => {
+    try { document.body.removeChild(iframe); } catch(e) {}
+  }, 5000);
 }
 
 function resetForm() {
