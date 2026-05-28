@@ -1329,6 +1329,7 @@ function generateCard(mode) {
           <div class="ov-grid">
             <div class="ov-cell"><div class="ov-clabel">档期</div><div class="ov-cval">${avail}</div></div>
             <div class="ov-cell"><div class="ov-clabel">地区</div><div class="ov-cval">${city}</div></div>
+            ${price ? '<div class="ov-cell"><div class="ov-clabel">报价</div><div class="ov-cval">'+price+'</div></div>' : ''}
             ${countNum ? '<div class="ov-cell"><div class="ov-clabel">精修</div><div class="ov-cval">'+countNum+'</div></div>' : ''}
             ${deliveryNum ? '<div class="ov-cell"><div class="ov-clabel">交付</div><div class="ov-cval">'+deliveryNum+'</div></div>' : ''}
           </div>
